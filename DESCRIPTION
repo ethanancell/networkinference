@@ -1,14 +1,25 @@
 Package: networkinference
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Post-selection inference with a single realization of a network
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Ethan Ancell
+Maintainer: Ethan Ancell <ancell@uw.edu>
+Description: Implementation of the methods the "Post-selection inference with a
+    single realization of a network" paper. This package contains two crucial
+    functions (split_network() and infer_network()) which split an adjacency
+    matrix into two train and test adjacency matrices, and conduct inference
+    for a linear combination of connectivity patterns based upon the estimated
+    communities using the train network, respectively.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Imports:
+    stats
 Suggests: 
+    knitr,
+    nett,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+VignetteBuilder: knitr
+RoxygenNote: 7.3.2
