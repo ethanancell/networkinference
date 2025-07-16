@@ -16,11 +16,11 @@
 #' more in the test network.
 #' @param allow_self_loops A logical indicating whether the network allows
 #' self loops (edges pointing from a node to itself.) By default this parameter
-#' is set to `TRUE`. If this is set to `FALSE`, then the adjacency matrix should
-#' have zeros along the diagonal.
+#' is set to `TRUE`. If this is set to `FALSE`, then the values in the
+#' adjacency matrix along the diagonal will be ignored.
 #' @param is_directed A logical indicating whether the network is a directed
-#' network, and by default is set to `TRUE`. If this is set to `FALSE`, then the
-#' inputted adjacency matrix should be symmetric.
+#' network, and by default is set to `TRUE`. If this is set to `FALSE`, then
+#' only the values along the upper triangular portion of the matrix will be used.
 #' @param tau For networks with Gaussian edges only, this parameter indicates
 #' the known common standard deviation (square root of the variance) of the
 #' edges in the network.
@@ -81,11 +81,6 @@ split_matrix <- function(A, distribution, epsilon = 0.5, gamma = NULL,
       epsilon <- gamma
     }
   }
-  if (is_directed == FALSE) {
-    if (!isSymmetric(A)) {
-      stop("When specifying an undirected network, the matrix A needs to be symmetric.")
-    }
-  }
 
   # ---------------------------------------------------------
   # -- Do thinning / fission depending on the distribution --
@@ -113,8 +108,8 @@ split_matrix <- function(A, distribution, epsilon = 0.5, gamma = NULL,
   # Similarly, if the matrix does not allow self-loops then clear it out and
   # replace it with zeros.
   if (!is_directed) {
-    A_tr[lower.tri(A_tr)] <- t(A_tr)[lower.tri(A_tr)]
-    A_te[lower.tri(A_te)] <- t(A_te)[lower.tri(A_te)]
+    A_tr[lower.tri(A_tr)] <- 0
+    A_te[lower.tri(A_te)] <- 0
   }
   if (!allow_self_loops) {
     diag(A_tr) <- 0

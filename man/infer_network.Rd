@@ -27,7 +27,8 @@ function which will be used to conduct inference.}
 
 \item{u}{The linear combination vector (or matrix) which specifies which
 connectivity parameters should be considered when constructing the selected
-target of inference.}
+target of inference. If `is_directed` is set to `FALSE`, then the matrix
+version of `u` must be upper triangular.}
 
 \item{communities}{A vector or matrix which specifies the estimated
 communities. If this is inputted as a vector, then if `Ate` is of size `n` x `n`,
@@ -61,12 +62,12 @@ the Bernoulli distribution.}
 
 \item{allow_self_loops}{A logical indicating whether the network allows
 self loops (edges pointing from a node to itself.) By default this parameter
-is set to `TRUE`. If this is set to `FALSE`, then the adjacency matrix should
-have zeros along the diagonal.}
+is set to `TRUE`. If this is set to `FALSE`, then values in the adjacency
+matrix along the diagonal will be ignored.}
 
 \item{is_directed}{A logical indicating whether the network is a directed
-network, and by default is set to `TRUE`. If this is set to `FALSE`, then the
-inputted adjacency matrix should be symmetric.}
+network, and by default is set to `TRUE`. If this is set to `FALSE`, then only
+the values in the upper triangular portion of the adjacency matrix will be used.}
 
 \item{tau}{For networks with Gaussian edges only, this parameter indicates
 the known common standard deviation (square root of the variance) of the

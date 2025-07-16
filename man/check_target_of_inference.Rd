@@ -23,7 +23,8 @@ check_target_of_inference(
 
 \item{u}{The linear combination vector (or matrix) which specifies which
 connectivity parameters should be considered when constructing the selected
-target of inference.}
+target of inference. If `is_directed` is `FALSE`, then the matrix version of
+`u` must be upper triangular.}
 
 \item{communities}{A vector or matrix which specifies the estimated
 communities. If this is inputted as a vector, then if `M` is of size `n` x `n`,
@@ -39,12 +40,12 @@ there should only be a single 1 in each row of this matrix.}
 
 \item{allow_self_loops}{A logical indicating whether the network allows
 self loops (edges pointing from a node to itself.) By default this parameter
-is set to `TRUE`. If this is set to `FALSE`, then the mean matrix should
-have zeros along the diagonal.}
+is set to `TRUE`. If this is set to `FALSE`, then the values along the diagonal
+of the input `M` will be ignored.}
 
 \item{is_directed}{A logical indicating whether the network is a directed
-network, and by default is set to `TRUE`. If this is set to `FALSE`, then the
-inputted mean matrix should be symmetric.}
+network, and by default is set to `TRUE`. If this is set to `FALSE`, then only
+the values in the upper triangular portion of `M` will be used.}
 
 \item{bernoulli_target}{A logical indicating whether we should calculate
 the alternative target for Bernoulli networks specified in the paper that

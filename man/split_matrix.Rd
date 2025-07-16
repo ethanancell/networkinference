@@ -35,12 +35,12 @@ more in the test network.}
 
 \item{allow_self_loops}{A logical indicating whether the network allows
 self loops (edges pointing from a node to itself.) By default this parameter
-is set to `TRUE`. If this is set to `FALSE`, then the adjacency matrix should
-have zeros along the diagonal.}
+is set to `TRUE`. If this is set to `FALSE`, then the values in the
+adjacency matrix along the diagonal will be ignored.}
 
 \item{is_directed}{A logical indicating whether the network is a directed
-network, and by default is set to `TRUE`. If this is set to `FALSE`, then the
-inputted adjacency matrix should be symmetric.}
+network, and by default is set to `TRUE`. If this is set to `FALSE`, then
+only the values along the upper triangular portion of the matrix will be used.}
 
 \item{tau}{For networks with Gaussian edges only, this parameter indicates
 the known common standard deviation (square root of the variance) of the

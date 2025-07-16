@@ -51,15 +51,12 @@ test_that('Gaussian splitting works (undirected network with self loops)', {
   splitting_results2 <- split_matrix(A, 'gaussian', 0.5,
                                      is_directed = FALSE, tau = 5)
 
-  # Check that we recover the original matrix
-  expect_equal(A, splitting_results1$Atr + splitting_results1$Ate)
-  expect_equal(A, splitting_results2$Atr + splitting_results2$Ate)
+  recovered_matrix_1 <- splitting_results1$Atr + splitting_results1$Ate
+  recovered_matrix_2 <- splitting_results2$Atr + splitting_results2$Ate
 
-  # Check that the Atr and Ate are also symmetric
-  expect_equal(splitting_results1$Atr, t(splitting_results1$Atr))
-  expect_equal(splitting_results1$Ate, t(splitting_results1$Ate))
-  expect_equal(splitting_results2$Atr, t(splitting_results2$Atr))
-  expect_equal(splitting_results2$Ate, t(splitting_results2$Ate))
+  # Check that we recover the original matrix
+  expect_equal(A[upper.tri(A)], recovered_matrix_1[upper.tri(recovered_matrix_1)])
+  expect_equal(A[upper.tri(A)], recovered_matrix_2[upper.tri(recovered_matrix_2)])
 })
 
 test_that('Gaussian splitting works (undirected network without self loops)', {
@@ -73,15 +70,12 @@ test_that('Gaussian splitting works (undirected network without self loops)', {
                                      allow_self_loops = FALSE,
                                      is_directed = FALSE, tau = 5)
 
-  # Check that we recover the original matrix
-  expect_equal(A, splitting_results1$Atr + splitting_results1$Ate)
-  expect_equal(A, splitting_results2$Atr + splitting_results2$Ate)
+  recovered_matrix_1 <- splitting_results1$Atr + splitting_results1$Ate
+  recovered_matrix_2 <- splitting_results2$Atr + splitting_results2$Ate
 
-  # Check that the Atr and Ate are also symmetric
-  expect_equal(splitting_results1$Atr, t(splitting_results1$Atr))
-  expect_equal(splitting_results1$Ate, t(splitting_results1$Ate))
-  expect_equal(splitting_results2$Atr, t(splitting_results2$Atr))
-  expect_equal(splitting_results2$Ate, t(splitting_results2$Ate))
+  # Check that we recover the original matrix
+  expect_equal(A[upper.tri(A)], recovered_matrix_1[upper.tri(recovered_matrix_1)])
+  expect_equal(A[upper.tri(A)], recovered_matrix_2[upper.tri(recovered_matrix_2)])
 })
 
 # Poisson tests
@@ -114,15 +108,12 @@ test_that('Poisson splitting works (undirected network with self loops)', {
   splitting_results2 <- split_matrix(A, 'poisson', 0.5,
                                      is_directed = FALSE)
 
-  # Check that we recover the original matrix
-  expect_equal(A, splitting_results1$Atr + splitting_results1$Ate)
-  expect_equal(A, splitting_results2$Atr + splitting_results2$Ate)
+  recovered_matrix_1 <- splitting_results1$Atr + splitting_results1$Ate
+  recovered_matrix_2 <- splitting_results2$Atr + splitting_results2$Ate
 
-  # Check that the Atr and Ate are also symmetric
-  expect_equal(splitting_results1$Atr, t(splitting_results1$Atr))
-  expect_equal(splitting_results1$Ate, t(splitting_results1$Ate))
-  expect_equal(splitting_results2$Atr, t(splitting_results2$Atr))
-  expect_equal(splitting_results2$Ate, t(splitting_results2$Ate))
+  # Check that we recover the original matrix
+  expect_equal(A[upper.tri(A)], recovered_matrix_1[upper.tri(recovered_matrix_1)])
+  expect_equal(A[upper.tri(A)], recovered_matrix_2[upper.tri(recovered_matrix_2)])
 })
 
 test_that('Poisson splitting works (undirected network without self loops)', {
@@ -136,13 +127,10 @@ test_that('Poisson splitting works (undirected network without self loops)', {
                                      allow_self_loops = FALSE,
                                      is_directed = FALSE)
 
-  # Check that we recover the original matrix
-  expect_equal(A, splitting_results1$Atr + splitting_results1$Ate)
-  expect_equal(A, splitting_results2$Atr + splitting_results2$Ate)
+  recovered_matrix_1 <- splitting_results1$Atr + splitting_results1$Ate
+  recovered_matrix_2 <- splitting_results2$Atr + splitting_results2$Ate
 
-  # Check that the Atr and Ate are also symmetric
-  expect_equal(splitting_results1$Atr, t(splitting_results1$Atr))
-  expect_equal(splitting_results1$Ate, t(splitting_results1$Ate))
-  expect_equal(splitting_results2$Atr, t(splitting_results2$Atr))
-  expect_equal(splitting_results2$Ate, t(splitting_results2$Ate))
+  # Check that we recover the original matrix
+  expect_equal(A[upper.tri(A)], recovered_matrix_1[upper.tri(recovered_matrix_1)])
+  expect_equal(A[upper.tri(A)], recovered_matrix_2[upper.tri(recovered_matrix_2)])
 })

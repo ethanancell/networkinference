@@ -7,7 +7,8 @@
 #' function which will be used to conduct inference.
 #' @param u The linear combination vector (or matrix) which specifies which
 #' connectivity parameters should be considered when constructing the selected
-#' target of inference.
+#' target of inference. If `is_directed` is set to `FALSE`, then the matrix
+#' version of `u` must be upper triangular.
 #' @param communities A vector or matrix which specifies the estimated
 #' communities. If this is inputted as a vector, then if `Ate` is of size `n` x `n`,
 #' then this should be a vector of length `n`, where the ith element is the
@@ -34,11 +35,11 @@
 #' the Bernoulli distribution.
 #' @param allow_self_loops A logical indicating whether the network allows
 #' self loops (edges pointing from a node to itself.) By default this parameter
-#' is set to `TRUE`. If this is set to `FALSE`, then the adjacency matrix should
-#' have zeros along the diagonal.
+#' is set to `TRUE`. If this is set to `FALSE`, then values in the adjacency
+#' matrix along the diagonal will be ignored.
 #' @param is_directed A logical indicating whether the network is a directed
-#' network, and by default is set to `TRUE`. If this is set to `FALSE`, then the
-#' inputted adjacency matrix should be symmetric.
+#' network, and by default is set to `TRUE`. If this is set to `FALSE`, then only
+#' the values in the upper triangular portion of the adjacency matrix will be used.
 #' @param tau For networks with Gaussian edges only, this parameter indicates
 #' the known common standard deviation (square root of the variance) of the
 #' edges in the network.
@@ -196,16 +197,6 @@ infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
     if (any(!(Atr %in% c(0, 1)))) {
       stop("When specifying Bernoulli data, the matrix \"Atr\" must only contains 0s and 1s.")
     }
-    if (is_directed == FALSE) {
-      if (!isSymmetric(Atr)) {
-        stop("When specifying an undirected network, the matrix \"Atr\" needs to be symmetric.")
-      }
-    }
-  }
-  if (is_directed == FALSE) {
-    if (!isSymmetric(Ate)) {
-      stop("When specifying an undirected network, the matrix \"Ate\" needs to be symmetric.")
-    }
   }
 
   # Extract some info from the matrices
@@ -236,6 +227,13 @@ infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
       stop("The length of the linear combination vector \"u\" must be K^2.")
     }
   }
+  # If an undirected network, make sure that 'u_matrix' is upper triangular
+  if (!is_directed) {
+    if (any(u_as_matrix[lower.tri(u_as_matrix)] != 0)) {
+      stop("Because the network was specified as undirected, the matrix version of the input \"u\" must be upper triangular.")
+    }
+  }
+
   # Make sure that "u" is of norm 1
   u <- u / sqrt(sum(u^2))
   # If communities is a vector, then convert it to a matrix as well.
@@ -326,6 +324,11 @@ infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
 
         # Count up cardinality
         Ikl_card <- NROW(Ikl)
+
+        # Fail if there are 0 members in a community
+        if (Ikl_card < 1) {
+          stop(paste0("Community pair (", k, ", ", l, ") contains no edges at all! (Either one of the estimated communities contains no nodes at all, or it contains only a single node and the network does not allow self-loops.)"))
+        }
 
         # -------------- #
         # -- Gaussian -- #
