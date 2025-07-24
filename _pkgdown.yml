@@ -4,15 +4,18 @@ template:
   math-rendering: katex
 navbar:
   structure:
-    left: [home, reference, vignette]
+    left:
+    - home
+    - reference
+    - vignette
   components:
     home:
-      text: "Home"
+      text: Home
       href: index.html
     reference:
-      text: "Reference"
+      text: Reference
       href: reference/index.html
     vignette:
-      text: "Getting Started"
+      text: Getting Started
       href: articles/network-inference-vignette.html
 
