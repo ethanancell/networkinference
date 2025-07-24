@@ -8,6 +8,7 @@ navbar:
     - home
     - reference
     - vignette
+    - github
   components:
     home:
       text: Home
@@ -18,4 +19,7 @@ navbar:
     vignette:
       text: Getting Started
       href: articles/network-inference-vignette.html
+    github:
+      text: GitHub
+      href: https://github.com/ethanancell/networkinference
 

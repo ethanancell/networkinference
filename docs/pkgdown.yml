@@ -3,7 +3,7 @@ pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   network-inference-vignette: network-inference-vignette.html
-last_built: 2025-07-24T06:55Z
+last_built: 2025-07-24T07:05Z
 urls:
   reference: https://ethanancell.github.io/networkinference/reference
   article: https://ethanancell.github.io/networkinference/articles
