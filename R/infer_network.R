@@ -55,7 +55,7 @@
 #'
 #' # First, split a simulated Gaussian adjacency matrix
 #' A_gaussian <- matrix(stats::rnorm(n = 10^2, mean = 10, sd = 5), nrow = 10)
-#' gaussian_split <- split_matrix(A = A_gaussian, distribution = "gaussian",
+#' gaussian_split <- split_network(A = A_gaussian, distribution = "gaussian",
 #'                                epsilon = 0.3, tau = 5)
 #' A_gaussian_tr <- gaussian_split$Atr
 #' A_gaussian_te <- gaussian_split$Ate
@@ -98,7 +98,7 @@
 #'
 #' # First, split a simulated Bernoulli adjacency matrix with gamma=0.10
 #' A_bernoulli <- matrix(stats::rbinom(n = 10^2, size = 1, p = 0.5), nrow = 10)
-#' bernoulli_split <- split_matrix(A = A_bernoulli, distribution = "bernoulli",
+#' bernoulli_split <- split_network(A = A_bernoulli, distribution = "bernoulli",
 #'                                 gamma = 0.10)
 #' A_bernoulli_tr <- bernoulli_split$Atr
 #' A_bernoulli_te <- bernoulli_split$Ate

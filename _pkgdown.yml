@@ -1,0 +1,18 @@
+url: https://ethanancell.github.io/networkinference/
+template:
+  bootstrap: 5
+  math-rendering: katex
+navbar:
+  structure:
+    left: [home, reference, vignette]
+  components:
+    home:
+      text: "Home"
+      href: index.html
+    reference:
+      text: "Reference"
+      href: reference/index.html
+    vignette:
+      text: "Getting Started"
+      href: articles/network-inference-vignette.html
+

@@ -29,26 +29,26 @@
 #' @examples
 #' # Split a simulated Gaussian adjacency matrix
 #' A_gaussian <- matrix(rnorm(n = 10^2, mean = 10, sd = 5), nrow = 10)
-#' gaussian_split <- split_matrix(A_gaussian, "gaussian", 0.3, tau = 5)
+#' gaussian_split <- split_network(A_gaussian, "gaussian", 0.3, tau = 5)
 #' A_gaussian_tr <- gaussian_split$Atr
 #' A_gaussian_te <- gaussian_split$Ate
 #'
 #' # Split a simulated Bernoulli adjacency matrix with gamma = 0.25
 #' A_bernoulli <- matrix(rbinom(n = 10^2, size = 1, p = 0.5), nrow = 10)
-#' bernoulli_split <- split_matrix(A_bernoulli, "bernoulli", gamma = 0.25)
+#' bernoulli_split <- split_network(A_bernoulli, "bernoulli", gamma = 0.25)
 #' A_bernoulli_tr <- bernoulli_split$Atr
 #' A_bernoulli_te <- bernoulli_split$Ate
 #' @export
-split_matrix <- function(A, distribution, epsilon = 0.5, gamma = NULL,
-                         allow_self_loops = TRUE, is_directed = TRUE,
-                         tau = NULL) {
+split_network <- function(A, distribution, epsilon = 0.5, gamma = NULL,
+                          allow_self_loops = TRUE, is_directed = TRUE,
+                          tau = NULL) {
 
   # ---------------------- #
   # -- Check user input -- #
   # ---------------------- #
 
   if (!(is.matrix(A))) {
-    stop("The input \"A\" into split_matrix() needs to be a matrix.")
+    stop("The input \"A\" into split_network() needs to be a matrix.")
   }
   if (nrow(A) != ncol(A)) {
     stop("The input A must be a square matrix.")

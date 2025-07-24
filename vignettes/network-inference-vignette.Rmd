@@ -1,8 +1,8 @@
 ---
-title: "Vignette for post-selection inference with a single realization of a network"
+title: "Getting started with the networkinference R package"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{network-inference-vignette}
+  %\VignetteIndexEntry{Getting started with the networkinference R package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -57,11 +57,11 @@ par(pty = "s")
 image(t(A[nrow(A):1,]), axes = FALSE, asp = 1)
 ```
 
-Now, let's use the `split_matrix()` function from the package to split this adjacency matrix $A$ into our train and test adjacency matrices. As arguments, we must provide our distributional setting (Gaussian), our splitting parameter $\epsilon = 0.5$, as well as our known variance $\tau^2 = 4^2$.
+Now, let's use the `split_network()` function from the package to split this adjacency matrix $A$ into our train and test adjacency matrices. As arguments, we must provide our distributional setting (Gaussian), our splitting parameter $\epsilon = 0.5$, as well as our known variance $\tau^2 = 4^2$.
 
 ```{r, fig.width=6, fig.height = 3}
-gaussian_split_results <- split_matrix(A, distribution = "gaussian", 
-                                       epsilon = 0.5, tau = tau)
+gaussian_split_results <- split_network(A, distribution = "gaussian", 
+                                        epsilon = 0.5, tau = tau)
 Atr <- gaussian_split_results$Atr
 Ate <- gaussian_split_results$Ate
 
@@ -131,6 +131,10 @@ print(paste0("-> ", as.character(true_target_contained)))
 
 ```
 
+## Networks with Poisson edges
+
+The workflow for networks with Poisson edges is nearly identical to that of Gaussian edges, so a concrete example is omitted. The only difference for networks with Poisson edges is that in the `split_network()` and `infer_network()` functions, you should set `distribution = "poisson"`. Note also that the `tau` parameter is unnecessary and will be ignored.
+
 ## Networks with Bernoulli edges
 
 Once again, we consider a setting with $n=60$ nodes. In the Bernoulli setting, we assume $A_{ij} \overset{\text{ind.}}{\sim} \text{Bernoulli}(M_{ij})$, where $M_{ij}$ is unknown. Let us simulate in a setting where there are three "true communities," where the intra-community connectivity is $\rho_1 = 0.80$, and the inter-community connectivity is $\rho_2 = 0.40$.
@@ -162,11 +166,11 @@ par(pty = "s")
 image(t(A[nrow(A):1,]), axes = FALSE, asp = 1)
 ```
 
-Now, we can use the `split_matrix()` function from the package to split this into our train and test adjacency matrices. To split with a parameter $\gamma = 0.15$, we will pass in `gamma = 0.15` into the function, and specify our distributional setting.
+Now, we can use the `split_network()` function from the package to split this into our train and test adjacency matrices. To split with a parameter $\gamma = 0.15$, we will pass in `gamma = 0.15` into the function, and specify our distributional setting.
 
 ```{r, fig.width=6, fig.height = 3}
-bernoulli_split_results <- split_matrix(A, distribution = "bernoulli",
-                                        gamma = 0.15)
+bernoulli_split_results <- split_network(A, distribution = "bernoulli",
+                                         gamma = 0.15)
 Atr <- bernoulli_split_results$Atr
 Ate <- bernoulli_split_results$Ate
 

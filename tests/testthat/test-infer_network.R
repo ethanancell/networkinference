@@ -3,7 +3,7 @@ test_that("Expected results for Gaussian", {
   A <- matrix(rnorm(n = 100^2, mean = 0, sd = 5), nrow = 100)
 
   # Split A
-  A_split <- split_matrix(A, 'gaussian', 0.3, tau = 5)
+  A_split <- split_network(A, 'gaussian', 0.3, tau = 5)
   Atr <- A_split$Atr
   Ate <- A_split$Ate
 
