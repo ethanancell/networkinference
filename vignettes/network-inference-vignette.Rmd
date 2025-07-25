@@ -252,6 +252,7 @@ rho_1 <- 25 # Intra-community connectivity
 rho_2 <- 18 # Inter-community connectivity
 
 # Build tiles which we will use to construct our mean matrix M
+# (Note that I set the diagonal to be zero because we don't allow self-loops)
 zeros_block <- matrix(rep(0, n_per_community^2), nrow = n_per_community)
 intra_comm <- matrix(rep(0, n_per_community^2), nrow = n_per_community)
 intra_comm[upper.tri(intra_comm, diag = FALSE)] <- rho_1
