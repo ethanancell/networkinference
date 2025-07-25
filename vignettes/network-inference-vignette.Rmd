@@ -20,6 +20,9 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 ```{r setup}
 library(networkinference) # Package implementing the methods of this paper
 library(nett) # For spectral clustering
+library(RSpectra) # Dependency of nett package
+
+set.seed(1234) # Reproducibility
 ```
 
 # Examples

@@ -7,13 +7,13 @@
 #' follow. Acceptable distributions are `"gaussian"`, `"poisson"`, or `"bernoulli"`.
 #' @param epsilon The parameter controlling the amount of information
 #' allocated to the train network versus the test network. For Gaussian and
-#' Poisson networks, a larger value of `epsilon` indicates more information in
-#' the train network. For Bernoulli networks, this input is an alias to the
-#' `gamma` parameter.
+#' Poisson networks, this must be between 0 and 1 (non-inclusive). A larger
+#' value of epsilon indicates more information in the train network.
+#' For Bernoulli networks, this input is an alias to the `gamma` parameter.
 #' @param gamma For Bernoulli networks, the parameter controlling the amount
-#' of information allocated to the train network versus the test network. A
-#' larger value of `gamma` indicates less information in the train network, and
-#' more in the test network.
+#' of information allocated to the train network versus the test network.
+#' This must be between 0 and 0.5 (non-inclusive) A larger value of `gamma`
+#' indicates less information in the train network, and more in the test network.
 #' @param allow_self_loops A logical indicating whether the network allows
 #' self loops (edges pointing from a node to itself.) By default this parameter
 #' is set to `TRUE`. If this is set to `FALSE`, then the values in the
@@ -57,8 +57,19 @@ split_network <- function(A, distribution, epsilon = 0.5, gamma = NULL,
     stop("Input \"distribution\" needs to be one of \"gaussian\", \"poisson\", or \"bernoulli\".")
   }
   if (distribution %in% c("gaussian", "poisson")) {
+    if (epsilon <= 0) {
+      stop("Input \"epsilon\" cannot be less than or equal to 0.")
+    }
+    if (epsilon >= 1) {
+      stop("Input \"epsilon\" cannot be greater than or equal to 1.")
+    }
     if (!is.null(gamma)) {
       warning("A value of \"gamma\" was input even though the distribution is Poisson or Gaussian. The value of \"gamma\" will be ignored.")
+    }
+  }
+  if (distribution %in% c("poisson", "bernoulli")) {
+    if (!is.null(tau)) {
+      warning("The distribution is not Gaussian, but a value of \"tau\" was provided. Ignoring this argument.")
     }
   }
   if (distribution == "gaussian") {
@@ -79,6 +90,12 @@ split_network <- function(A, distribution, epsilon = 0.5, gamma = NULL,
         stop("The input \"gamma\" must be numeric.")
       }
       epsilon <- gamma
+    }
+    if (epsilon <= 0) {
+      stop("Input \"gamma\" cannot be less than or equal to 0.")
+    }
+    if (epsilon >= 0.5) {
+      stop("Input \"gamma\" cannot be greater than or equal to 0.5.")
     }
   }
 

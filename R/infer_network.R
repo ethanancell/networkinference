@@ -7,8 +7,8 @@
 #' function which will be used to conduct inference.
 #' @param u The linear combination vector (or matrix) which specifies which
 #' connectivity parameters should be considered when constructing the selected
-#' target of inference. If `is_directed` is set to `FALSE`, then the matrix
-#' version of `u` must be upper triangular.
+#' target of inference. This input should have norm 1. If `is_directed` is set
+#' to `FALSE`, then the matrix version of `u` must be upper triangular.
 #' @param communities A vector or matrix which specifies the estimated
 #' communities. If this is inputted as a vector, then if `Ate` is of size `n` x `n`,
 #' then this should be a vector of length `n`, where the ith element is the
@@ -23,13 +23,13 @@
 #' @param K The number of estimated communities.
 #' @param epsilon The parameter controlling the amount of information
 #' allocated to the train network versus the test network. For Gaussian and
-#' Poisson networks, a larger value of epsilon indicates more information in
-#' the train network. For Bernoulli networks, this input is an alias to the
-#' `gamma` parameter.
+#' Poisson networks, this must be between 0 and 1 (non-inclusive). A larger
+#' value of epsilon indicates more information in the train network.
+#' For Bernoulli networks, this input is an alias to the `gamma` parameter.
 #' @param gamma For Bernoulli networks, the parameter controlling the amount
-#' of information allocated to the train network versus the test network. A
-#' larger value of `gamma` indicates less information in the train network, and
-#' more in the test network.
+#' of information allocated to the train network versus the test network.
+#' This must be between 0 and 0.5 (non-inclusive) A larger value of `gamma`
+#' indicates less information in the train network, and more in the test network.
 #' @param Atr The train adjacency matrix produced from the `split_network()`
 #' function. This is only necessary when the network has edges which follow
 #' the Bernoulli distribution.
@@ -157,8 +157,19 @@ infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
     stop("Input \"distribution\" needs to be one of \"gaussian\", \"poisson\", or \"bernoulli\".")
   }
   if (distribution %in% c("gaussian", "poisson")) {
+    if (epsilon <= 0) {
+      stop("Input \"epsilon\" cannot be less than or equal to 0.")
+    }
+    if (epsilon >= 1) {
+      stop("Input \"epsilon\" cannot be greater than or equal to 1.")
+    }
     if (!is.null(gamma)) {
       warning("A value of \"gamma\" was input even though the distribution is Poisson or Gaussian. The value of \"gamma\" will be ignored.")
+    }
+  }
+  if (distribution %in% c("poisson", "bernoulli")) {
+    if (!is.null(tau)) {
+      warning("The distribution is not Gaussian, but a value of \"tau\" was provided. Ignoring this argument.")
     }
   }
   if (distribution == "gaussian") {
@@ -181,7 +192,12 @@ infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
       }
       epsilon <- gamma
     }
-
+    if (epsilon <= 0) {
+      stop("Input \"gamma\" cannot be less than or equal to 0.")
+    }
+    if (epsilon >= 0.5) {
+      stop("Input \"gamma\" cannot be greater than or equal to 0.5.")
+    }
     if (is.null(Atr)) {
       stop("When specifying a Bernoulli disribution, an input for \"Atr\" is required.")
     }
@@ -232,6 +248,10 @@ infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
     if (any(u_as_matrix[lower.tri(u_as_matrix)] != 0)) {
       stop("Because the network was specified as undirected, the matrix version of the input \"u\" must be upper triangular.")
     }
+  }
+
+  if (abs(sum(u^2) - 1) > 0.001) {
+    warning("Inputted \"u\" is not of norm 1. Normalizing this input to make it norm 1.")
   }
 
   # Make sure that "u" is of norm 1

@@ -5,8 +5,8 @@
 #' @param M The true mean matrix.
 #' @param u The linear combination vector (or matrix) which specifies which
 #' connectivity parameters should be considered when constructing the selected
-#' target of inference. If `is_directed` is `FALSE`, then the matrix version of
-#' `u` must be upper triangular.
+#' target of inference. This input should have norm 1. If `is_directed` is set
+#' to `FALSE`, then the matrix version of `u` must be upper triangular.
 #' @param communities A vector or matrix which specifies the estimated
 #' communities. If this is inputted as a vector, then if `M` is of size `n` x `n`,
 #' then this should be a vector of length `n`, where the ith element is the
@@ -29,9 +29,9 @@
 #' is close to the actual target of interest. If this is set to `TRUE`, then
 #' the argument `Atr` must also be provided.
 #' @param gamma For Bernoulli networks, the parameter controlling the amount
-#' of information allocated to the train network versus the test network. A
-#' larger value of `gamma` indicates less information in the train network, and
-#' more in the test network.
+#' of information allocated to the train network versus the test network.
+#' This must be between 0 and 0.5 (non-inclusive) A larger value of `gamma`
+#' indicates less information in the train network, and more in the test network.
 #' @param Atr A matrix of the same size as `M` arising from the
 #' `split_network()` function. This argument will only be used if
 #' the `bernoulli_target` argument is set to `TRUE`.
@@ -92,6 +92,12 @@ check_target_of_inference <- function(M, u, communities, K,
     if (!is.numeric(gamma)) {
       stop("The argument \"gamma\" must be numeric.")
     }
+    if (gamma <= 0) {
+      stop("Input \"gamma\" cannot be less than or equal to 0.")
+    }
+    if (gamma >= 0.5) {
+      stop("Input \"gamma\" cannot be greater than or equal to 0.5.")
+    }
     if (!(is.matrix(Atr))) {
       stop("The input \"Atr\" needs to be a matrix.")
     }
@@ -132,6 +138,11 @@ check_target_of_inference <- function(M, u, communities, K,
       stop("The length of the linear combination vector \"u\" must be K^2.")
     }
   }
+
+  if (abs(sum(u^2) - 1) > 0.001) {
+    warning("Inputted \"u\" is not of norm 1. Normalizing this input to make it norm 1.")
+  }
+
   # Make sure that "u" is of norm 1
   u <- u / sqrt(sum(u^2))
   # If communities is a vector, then convert it to a matrix as well.
