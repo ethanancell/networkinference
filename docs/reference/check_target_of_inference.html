@@ -51,7 +51,6 @@ of inference.</p>
 <span>  <span class="va">M</span>,</span>
 <span>  <span class="va">u</span>,</span>
 <span>  <span class="va">communities</span>,</span>
-<span>  <span class="va">K</span>,</span>
 <span>  allow_self_loops <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  is_directed <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  bernoulli_target <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -71,8 +70,8 @@ of inference.</p>
 <dt id="arg-u">u<a class="anchor" aria-label="anchor" href="#arg-u"></a></dt>
 <dd><p>The linear combination vector (or matrix) which specifies which
 connectivity parameters should be considered when constructing the selected
-target of inference. If `is_directed` is `FALSE`, then the matrix version of
-`u` must be upper triangular.</p></dd>
+target of inference. This input should have norm 1. If `is_directed` is set
+to `FALSE`, then the matrix version of `u` must be upper triangular.</p></dd>
 
 
 <dt id="arg-communities">communities<a class="anchor" aria-label="anchor" href="#arg-communities"></a></dt>
@@ -85,10 +84,6 @@ is inputted as a matrix, then it should be a matrix of 0s and 1s only, where
 `communities[i, k] = 1` indicates that the ith node belongs to the kth
 community. Each node is only allowed to belong to a single community, so
 there should only be a single 1 in each row of this matrix.</p></dd>
-
-
-<dt id="arg-k">K<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>
-<dd><p>The number of estimated communities.</p></dd>
 
 
 <dt id="arg-allow-self-loops">allow_self_loops<a class="anchor" aria-label="anchor" href="#arg-allow-self-loops"></a></dt>
@@ -113,9 +108,9 @@ the argument `Atr` must also be provided.</p></dd>
 
 <dt id="arg-gamma">gamma<a class="anchor" aria-label="anchor" href="#arg-gamma"></a></dt>
 <dd><p>For Bernoulli networks, the parameter controlling the amount
-of information allocated to the train network versus the test network. A
-larger value of `gamma` indicates less information in the train network, and
-more in the test network.</p></dd>
+of information allocated to the train network versus the test network.
+This must be between 0 and 0.5 (non-inclusive) A larger value of `gamma`
+indicates less information in the train network, and more in the test network.</p></dd>
 
 
 <dt id="arg-atr">Atr<a class="anchor" aria-label="anchor" href="#arg-atr"></a></dt>
@@ -148,7 +143,7 @@ the `bernoulli_target` argument is set to `TRUE`.</p></dd>
 <span><span class="co"># first estimated community)</span></span>
 <span><span class="va">target_of_inference</span> <span class="op">&lt;-</span></span>
 <span>  <span class="fu">check_target_of_inference</span><span class="op">(</span>M <span class="op">=</span> <span class="va">M</span>, u <span class="op">=</span> <span class="va">u_vector</span>,</span>
-<span>                            communities <span class="op">=</span> <span class="va">communities_estimate</span>, K <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>                            communities <span class="op">=</span> <span class="va">communities_estimate</span>,</span>
 <span>                            allow_self_loops <span class="op">=</span> <span class="cn">TRUE</span>, is_directed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

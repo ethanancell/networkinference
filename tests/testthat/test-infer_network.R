@@ -17,7 +17,7 @@ test_that("Expected results for Gaussian", {
 
   gaussian_results <- infer_network(Ate, u = u, communities = z_hat,
                                     distribution = 'gaussian', epsilon = 0.3,
-                                    K = 4, Atr = Atr, tau = 5)
+                                    Atr = Atr, tau = 5)
 
   # Make sure that a 99.99% confidence interval contains 0 (:
   # (I guess this means this unit test will fail 0.01% of the time)

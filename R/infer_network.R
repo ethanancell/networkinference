@@ -14,13 +14,13 @@
 #' then this should be a vector of length `n`, where the ith element is the
 #' numbered community that the ith node belongs to. For example, `communities[2] = 3`
 #' would indicate that the 2nd node belongs to the 3rd estimated community. If this
-#' is inputted as a matrix, then it should be a matrix of 0s and 1s only, where
-#' `communities[i, k] = 1` indicates that the ith node belongs to the kth
+#' is inputted as a matrix, then it should be a matrix of size `n` x `K`, where
+#' `K` is the number of estimated communities. The matrix should have 0s and 1s only, where
+#' `communities[i, k] = 1` indicates that the ith node belongs to the `k`th
 #' community. Each node is only allowed to belong to a single community, so
 #' there should only be a single 1 in each row of this matrix.
 #' @param distribution The distribution that the edges of the adjacency matrix
 #' follow. Acceptable distributions are `"gaussian"`, `"poisson"`, or `"bernoulli"`.
-#' @param K The number of estimated communities.
 #' @param epsilon The parameter controlling the amount of information
 #' allocated to the train network versus the test network. For Gaussian and
 #' Poisson networks, this must be between 0 and 1 (non-inclusive). A larger
@@ -85,7 +85,7 @@
 #'     infer_network(Ate = A_gaussian_te, u = u_matrix,
 #'                   communities = communities_estimate,
 #'                   distribution = "gaussian",
-#'                   epsilon = 0.3, K = 3, tau = 5)
+#'                   epsilon = 0.3, tau = 5)
 #'
 #' # Produce a 90% confidence interval for the target of inference
 #' margin_of_error <- sqrt(gaussian_inference$estimate_variance) * qnorm(0.95)
@@ -128,17 +128,16 @@
 #'     infer_network(Ate = A_bernoulli_te, u = u_matrix,
 #'                   communities = communities_estimate,
 #'                   distribution = "bernoulli",
-#'                   gamma = 0.10, K = 3,
-#'                   Atr = A_bernoulli_tr)
+#'                   gamma = 0.10, Atr = A_bernoulli_tr)
 #'
 #' # Produce a 90% confidence interval for the target of inference
 #' margin_of_error <- sqrt(bernoulli_inference$estimate_variance) * qnorm(0.95)
 #' ci_upper_bound <- bernoulli_inference$estimate + margin_of_error
 #' ci_lower_bound <- bernoulli_inference$estimate - margin_of_error
 #' @export
-infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
+infer_network <- function(Ate, u, communities, distribution, epsilon = 0.5,
                           gamma = NULL, Atr = NULL, allow_self_loops = TRUE, is_directed = TRUE,
-                          tau = NA) {
+                          tau = NULL) {
 
   # ---------------------- #
   # -- Check user input -- #
@@ -147,9 +146,6 @@ infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
   if (!(is.matrix(Ate))) {
     stop("The input \"Ate\" needs to be a matrix.")
   }
-  if (!(is.numeric(K))) {
-    stop("The input \"K\" must be an integer.")
-  }
   if (nrow(Ate) != ncol(Ate)) {
     stop("The input \"Ate\" must be a square matrix.")
   }
@@ -157,11 +153,11 @@ infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
     stop("Input \"distribution\" needs to be one of \"gaussian\", \"poisson\", or \"bernoulli\".")
   }
   if (distribution %in% c("gaussian", "poisson")) {
-    if (epsilon <= 0) {
-      stop("Input \"epsilon\" cannot be less than or equal to 0.")
+    if (epsilon < 0) {
+      stop("Input \"epsilon\" cannot be less than 0.")
     }
-    if (epsilon >= 1) {
-      stop("Input \"epsilon\" cannot be greater than or equal to 1.")
+    if (epsilon > 1) {
+      stop("Input \"epsilon\" cannot be greater than 1.")
     }
     if (!is.null(gamma)) {
       warning("A value of \"gamma\" was input even though the distribution is Poisson or Gaussian. The value of \"gamma\" will be ignored.")
@@ -173,7 +169,7 @@ infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
     }
   }
   if (distribution == "gaussian") {
-    if (is.na(tau)) {
+    if (is.null(tau)) {
       stop("When specifying a Gaussian distribution, the known standard deviation \"tau\" must be inputted.")
     }
     if (!is.numeric(tau)) {
@@ -192,11 +188,11 @@ infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
       }
       epsilon <- gamma
     }
-    if (epsilon <= 0) {
-      stop("Input \"gamma\" cannot be less than or equal to 0.")
+    if (epsilon < 0) {
+      stop("Input \"gamma\" cannot be less than 0.")
     }
-    if (epsilon >= 0.5) {
-      stop("Input \"gamma\" cannot be greater than or equal to 0.5.")
+    if (epsilon >= 0.50001) {
+      stop("Input \"gamma\" cannot be greater than 0.5.")
     }
     if (is.null(Atr)) {
       stop("When specifying a Bernoulli disribution, an input for \"Atr\" is required.")
@@ -217,15 +213,73 @@ infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
 
   # Extract some info from the matrices
   n <- NROW(Ate)
-  K <- as.integer(K) # Technically just needs to be input as a numeric
 
-  # Check the communities input
+  # Checks on communities
   if (!((is.matrix(communities)) |
         (is.numeric(communities) && is.vector(communities)) |
         (is.factor(communities) && is.vector(communities)))) {
-    stop("Input \"communities\" must be either a matrix or a vector.")
+    stop("Input \"communities\" must be either a matrix or a vector. If it is a vector, it must be a factor or contain only positive integers.")
   }
-  # If u is inputted as a matrix, first vectorize it
+
+  if (is.vector(communities)) {
+    if (!is.factor(communities) & !is.numeric(communities)) {
+      stop("When inputting \"communities\" as a vector, it must be a vector of factors or a vector of positive integers.")
+    }
+    if (length(communities) != n) {
+      stop("The length of the vector \"communities\" is not equal to the dimension of the network \"Ate\".")
+    }
+    if (is.numeric(communities)) {
+      communities <- as.integer(communities)
+      if (any(communities <= 0)) {
+        stop("Input \"communities\" must only contain positive integers.")
+      }
+    }
+
+    # Infer number of communities from this
+    K <- length(unique(communities))
+
+    # Make sure that K is the same as the maximum integer
+    if (any(communities > K)) {
+      stop("Number of unique elements in \"communities\" is not equal to the maximum community number. (Perhaps there are some communities from 1 to K that do not appear?)")
+    }
+
+    comm_as_vector <- communities
+    comm_as_matrix <- matrix(rep(NA, n*K), nrow = n)
+    for (i in 1:K) {
+      comm_as_matrix[, i] <- 1 * (comm_as_vector == i)
+    }
+    n_hat <- apply(comm_as_matrix, 2, sum) # The number of nodes in each of the
+    # estimated communities
+  }
+  if (is.matrix(communities)) {
+    # Check right dimensions
+    if (NROW(communities) != n) {
+      stop("The number of rows in \"communities\" matrix must be equal to the nodes in the network.")
+    }
+    if (any(!(communities %in% c(0, 1)))) {
+      stop("When specifying \"communities\" as a matrix, it must only contain 0s and 1s.")
+    }
+    if (any(apply(communities, 1, sum) != 1)) {
+      stop("When specifying \"communities\" as a matrix, each row must only contain a single 1. No partial community membership is allowed.")
+    }
+    comm_as_matrix <- communities
+    K <- NCOL(comm_as_matrix)
+
+    comm_as_vector <- rep(NA, n)
+    for (i in 1:n) {
+      comm_as_vector[i] <- which(communities[i, ] == 1)
+    }
+    n_hat <- apply(comm_as_matrix, 2, sum) # The number of nodes in each of the
+    # estimated communities
+  }
+
+  # Checks on linear combination vector 'u'
+  if (abs(sum(u^2) - 1) > 0.0001) {
+    warning("Inputted \"u\" is not of norm 1. Normalizing this input to make it norm 1.")
+  }
+  # Make sure that "u" is of norm 1
+  u <- u / sqrt(sum(u^2))
+
   if (is.matrix(u)) {
     u_as_matrix <- u
     u <- as.vector(u)
@@ -248,55 +302,6 @@ infer_network <- function(Ate, u, communities, distribution, K, epsilon = 0.5,
     if (any(u_as_matrix[lower.tri(u_as_matrix)] != 0)) {
       stop("Because the network was specified as undirected, the matrix version of the input \"u\" must be upper triangular.")
     }
-  }
-
-  if (abs(sum(u^2) - 1) > 0.001) {
-    warning("Inputted \"u\" is not of norm 1. Normalizing this input to make it norm 1.")
-  }
-
-  # Make sure that "u" is of norm 1
-  u <- u / sqrt(sum(u^2))
-  # If communities is a vector, then convert it to a matrix as well.
-  if (is.vector(communities)) {
-    if (!is.factor(communities) & !is.numeric(communities)) {
-      stop("When inputting \"communities\" as a vector, it must be a vector of factors or a vector of integers.")
-    }
-    if (length(communities) != n) {
-      stop("The length of the vector \"communities\" is not equal to the dimension of the network \"Ate\".")
-    }
-    if (is.numeric(communities)) {
-      communities <- as.integer(communities)
-    }
-
-    comm_as_vector <- communities
-    comm_as_matrix <- matrix(rep(NA, n*K), nrow = n)
-    for (i in 1:K) {
-      comm_as_matrix[, i] <- 1 * (comm_as_vector == i)
-    }
-    n_hat <- apply(comm_as_matrix, 2, sum) # The number of nodes in each of the
-                                           # estimated communities
-  }
-  if (is.matrix(communities)) {
-    # Check right dimensions
-    if (NROW(communities) != n) {
-      stop("The number of rows in \"communities\" matrix must be equal to the nodes in the network.")
-    }
-    if (NCOL(communities) != K) {
-      stop("The number of columns in \"communities\" matrix must be equal to the number of estimated communities \"K\".")
-    }
-    if (any(!(communities %in% c(0, 1)))) {
-      stop("When specifying \"communities\" as a matrix, it must only contain 0s and 1s.")
-    }
-    if (any(apply(communities, 1, sum) != 1)) {
-      stop("When specifying \"communities\" as a matrix, each row must only contain a single 1. No partial community membership is allowed.")
-    }
-    comm_as_matrix <- communities
-    comm_as_vector <- rep(NA, n)
-    for (i in 1:n) {
-      comm_as_vector[i] <- which(communities[i, ] == 1)
-    }
-    n_hat <- apply(comm_as_matrix, 2, sum) # The number of nodes in each of the
-                                           # estimated communities
   }
 
   # ======================================================= #

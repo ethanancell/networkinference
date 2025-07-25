@@ -10,7 +10,6 @@ check_target_of_inference(
   M,
   u,
   communities,
-  K,
   allow_self_loops = TRUE,
   is_directed = TRUE,
   bernoulli_target = FALSE,
@@ -23,8 +22,8 @@ check_target_of_inference(
 
 \item{u}{The linear combination vector (or matrix) which specifies which
 connectivity parameters should be considered when constructing the selected
-target of inference. If `is_directed` is `FALSE`, then the matrix version of
-`u` must be upper triangular.}
+target of inference. This input should have norm 1. If `is_directed` is set
+to `FALSE`, then the matrix version of `u` must be upper triangular.}
 
 \item{communities}{A vector or matrix which specifies the estimated
 communities. If this is inputted as a vector, then if `M` is of size `n` x `n`,
@@ -35,8 +34,6 @@ is inputted as a matrix, then it should be a matrix of 0s and 1s only, where
 `communities[i, k] = 1` indicates that the ith node belongs to the kth
 community. Each node is only allowed to belong to a single community, so
 there should only be a single 1 in each row of this matrix.}
-
-\item{K}{The number of estimated communities.}
 
 \item{allow_self_loops}{A logical indicating whether the network allows
 self loops (edges pointing from a node to itself.) By default this parameter
@@ -53,9 +50,9 @@ is close to the actual target of interest. If this is set to `TRUE`, then
 the argument `Atr` must also be provided.}
 
 \item{gamma}{For Bernoulli networks, the parameter controlling the amount
-of information allocated to the train network versus the test network. A
-larger value of `gamma` indicates less information in the train network, and
-more in the test network.}
+of information allocated to the train network versus the test network.
+This must be between 0 and 0.5 (non-inclusive) A larger value of `gamma`
+indicates less information in the train network, and more in the test network.}
 
 \item{Atr}{A matrix of the same size as `M` arising from the
 `split_network()` function. This argument will only be used if
@@ -87,6 +84,6 @@ u_vector <- c(1, 0,
 # first estimated community)
 target_of_inference <-
   check_target_of_inference(M = M, u = u_vector,
-                            communities = communities_estimate, K = 2,
+                            communities = communities_estimate,
                             allow_self_loops = TRUE, is_directed = TRUE)
 }

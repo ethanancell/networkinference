@@ -98,7 +98,7 @@ gaussian_inference <-
   infer_network(Ate = Ate, u = u_vector,
                 communities = estimated_communities,
                 distribution = "gaussian",
-                epsilon = 0.5, K = 4, tau = tau)
+                epsilon = 0.5, tau = tau)
 ```
 
 The resulting `gaussian_inference` contains two pieces, the estimate `gaussian_inference$estimate` ($\hat{\theta}(A^{(\text{tr})})$ in the accompanying paper), as well as the estimate of the variance `gaussian_inference$estimate_variance` ($\hat{\sigma}^2$ in the accompanying paper). In this case, we find that
@@ -122,8 +122,7 @@ Because we simulated the data ourselves, we can check whether this confidence in
 
 ```{r}
 true_target <- check_target_of_inference(M = M, u = u_vector,
-                                         communities = estimated_communities,
-                                         K = 4)
+                                         communities = estimated_communities)
 true_target_contained <- (ci_lower_bound <= true_target) & 
   (true_target <= ci_upper_bound)
 
@@ -133,10 +132,6 @@ print("Did the 90% confidence interval contain the true target of inference?")
 print(paste0("-> ", as.character(true_target_contained)))
 
 ```
-
-## Networks with Poisson edges
-
-The workflow for networks with Poisson edges is nearly identical to that of Gaussian edges, so a concrete example is omitted. The only difference for networks with Poisson edges is that in the `split_network()` and `infer_network()` functions, you should set `distribution = "poisson"`. Note also that the `tau` parameter is unnecessary and will be ignored.
 
 ## Networks with Bernoulli edges
 
@@ -208,7 +203,7 @@ bernoulli_inference <-
                 communities = estimated_communities,
                 distribution = "bernoulli",
                 Atr = Atr,
-                gamma = 0.15, K = 4)
+                gamma = 0.15)
 ```
 
 The resulting object `bernoulli_inference` contains two pieces, the estimate `bernoulli_inference$estimate` ($\hat{\xi}(A^{(\text{tr})})$ in the paper), as well as the estimate of the variance `bernoulli_inference$estimate_variance` ($\hat{\sigma}^2$ in the paper). In this case, we find that
@@ -231,14 +226,110 @@ Because we simulated the data ourselves, we can check how this matches up with t
 
 ```{r}
 true_target_theta <- check_target_of_inference(M = M, u = u_vector,
-                                               communities = estimated_communities,
-                                               K = 4)
+                                               communities = estimated_communities)
 true_target_xi <- check_target_of_inference(M = M, u = u_vector,
                                             communities = estimated_communities,
-                                            K = 4, bernoulli_target = TRUE,
+                                            bernoulli_target = TRUE,
                                             gamma = 0.15, Atr = Atr)
 ```
 
 In this case, we find that
 
 $$\theta(A^{(\text{tr})}) = `r round(true_target_theta, 4)`, \quad \xi(A^{(\text{tr})}) = `r round(true_target_xi, 4)`.$$
+
+## Undirected networks and networks without self-loops
+
+When working with undirected networks, an edge linking node $i$ to $j$ is synonymous with an edge linking node $j$ to $i$. In the `networkinference` package, only the upper triangular portions of the adjacency matrices for undirected networks are used. Crucially, the linear combination vector $u$ must also correspond to an upper triangular matrix.
+
+For networks that do not allow self-loops, all values along the diagonal of the adjacency matrix $A$ are ignored.
+
+Here is a simple example involving an undirected Poisson network that does not allow self-loops.
+
+```{r}
+n <- 60
+n_per_community <- 30
+rho_1 <- 25 # Intra-community connectivity
+rho_2 <- 18 # Inter-community connectivity
+
+# Build tiles which we will use to construct our mean matrix M
+zeros_block <- matrix(rep(0, n_per_community^2), nrow = n_per_community)
+intra_comm <- matrix(rep(0, n_per_community^2), nrow = n_per_community)
+intra_comm[upper.tri(intra_comm, diag = FALSE)] <- rho_1
+inter_comm <- matrix(rep(rho_2, n_per_community^2), nrow = n_per_community)
+
+# Construct mean matrix
+M <- rbind(cbind(intra_comm, inter_comm),
+           cbind(zeros_block, intra_comm))
+
+# Draw a network using this mean matrix
+A <- matrix(rpois(n = n^2, lambda = as.vector(M)), nrow = n)
+```
+
+Visualizing the adjacency matrix with an image (rows run from top to bottom, columns run from left to right), we can see that there are a greater density of connections within communities than there are between communities.
+
+```{r, fig.width = 4, fig.height = 4}
+par(mar = c(0.5, 0.5, 0.5, 0.5))
+par(pty = "s")
+image(t(A[nrow(A):1,]), axes = FALSE, asp = 1)
+```
+
+Now, let's use the `split_network()` function from the package to split this adjacency matrix $A$ into our train and test adjacency matrices. As arguments, we must provide our distributional setting (Poisson), and our splitting parameter $\epsilon = 0.5$.
+
+```{r, fig.width=6, fig.height = 3}
+poisson_split_results <- split_network(A, distribution = "poisson", 
+                                       epsilon = 0.5, is_directed = FALSE,
+                                       allow_self_loops = FALSE)
+Atr <- poisson_split_results$Atr
+Ate <- poisson_split_results$Ate
+
+# Visualize both the Atr and Ate matrices
+layout(matrix(1, 2, nrow = 1))
+par(mfrow = c(1, 2), mar = c(1, 1, 1, 1))
+image(t(Atr[nrow(Atr):1,]), axes = FALSE, asp = 1)
+title("Train network")
+image(t(Ate[nrow(Ate):1,]), axes = FALSE, asp = 1)
+title("Test network")
+```
+
+Now, let us conduct community estimation using `Atr` using $K=2$ communities.
+
+```{r}
+# Importantly, note that nett:spec_clust wants your matrix to be symmetric,
+# not just upper triangular.
+Atr_symm <- Atr + t(Atr)
+estimated_communities <- nett::spec_clust(Atr_symm, K = 2)
+estimated_communities # A vector specifying each node's estimated community
+```
+
+Let's conduct inference for the **difference between the connectivity within the estimated communities and the connectivity between the communities.** To do this, we will want to set an appropriate linear combination vector $u$ which is of length $K^2$, where $K$ is the number of estimated communities. Because our network is undirected, $u$ **must be upper triangular.**
+
+```{r}
+# Note that matrix(u_vector, nrow = 2) would be upper triangular!
+u_vector <- c(1, 0, -2, 1)
+
+# Normalize it
+u_vector <- u_vector / sqrt(sum(u_vector^2))
+
+# Conduct inference for the selected target (mean connectivity within the
+# first estimated community)
+poisson_inference <-
+  infer_network(Ate = Ate, u = u_vector,
+                communities = estimated_communities,
+                distribution = "poisson",
+                epsilon = 0.5, is_directed = FALSE,
+                allow_self_loops = FALSE)
+```
+
+Now, let's create a 90\% confidence interval for the selected parameter.
+
+```{r}
+alpha <- 0.10
+margin_of_error <- qnorm(1 - alpha/2) * sqrt(poisson_inference$estimate_variance)
+ci_lower_bound <- poisson_inference$estimate - margin_of_error
+ci_upper_bound <- poisson_inference$estimate + margin_of_error
+
+print(paste0("Confidence interval for selected target is [",
+             round(ci_lower_bound, 4), ", ", round(ci_upper_bound, 4), "]"))
+```
+
+

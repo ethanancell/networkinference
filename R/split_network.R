@@ -94,8 +94,8 @@ split_network <- function(A, distribution, epsilon = 0.5, gamma = NULL,
     if (epsilon <= 0) {
       stop("Input \"gamma\" cannot be less than or equal to 0.")
     }
-    if (epsilon >= 0.5) {
-      stop("Input \"gamma\" cannot be greater than or equal to 0.5.")
+    if (epsilon >= 0.50001) {
+      stop("Input \"gamma\" cannot be greater than 0.5.")
     }
   }
 

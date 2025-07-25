@@ -24,14 +24,14 @@ follow. Acceptable distributions are `"gaussian"`, `"poisson"`, or `"bernoulli"`
 
 \item{epsilon}{The parameter controlling the amount of information
 allocated to the train network versus the test network. For Gaussian and
-Poisson networks, a larger value of `epsilon` indicates more information in
-the train network. For Bernoulli networks, this input is an alias to the
-`gamma` parameter.}
+Poisson networks, this must be between 0 and 1 (non-inclusive). A larger
+value of epsilon indicates more information in the train network.
+For Bernoulli networks, this input is an alias to the `gamma` parameter.}
 
 \item{gamma}{For Bernoulli networks, the parameter controlling the amount
-of information allocated to the train network versus the test network. A
-larger value of `gamma` indicates less information in the train network, and
-more in the test network.}
+of information allocated to the train network versus the test network.
+This must be between 0 and 0.5 (non-inclusive) A larger value of `gamma`
+indicates less information in the train network, and more in the test network.}
 
 \item{allow_self_loops}{A logical indicating whether the network allows
 self loops (edges pointing from a node to itself.) By default this parameter

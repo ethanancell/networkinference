@@ -12,13 +12,12 @@ infer_network(
   u,
   communities,
   distribution,
-  K,
   epsilon = 0.5,
   gamma = NULL,
   Atr = NULL,
   allow_self_loops = TRUE,
   is_directed = TRUE,
-  tau = NA
+  tau = NULL
 )
 }
 \arguments{
@@ -27,34 +26,33 @@ function which will be used to conduct inference.}
 
 \item{u}{The linear combination vector (or matrix) which specifies which
 connectivity parameters should be considered when constructing the selected
-target of inference. If `is_directed` is set to `FALSE`, then the matrix
-version of `u` must be upper triangular.}
+target of inference. This input should have norm 1. If `is_directed` is set
+to `FALSE`, then the matrix version of `u` must be upper triangular.}
 
 \item{communities}{A vector or matrix which specifies the estimated
 communities. If this is inputted as a vector, then if `Ate` is of size `n` x `n`,
 then this should be a vector of length `n`, where the ith element is the
 numbered community that the ith node belongs to. For example, `communities[2] = 3`
 would indicate that the 2nd node belongs to the 3rd estimated community. If this
-is inputted as a matrix, then it should be a matrix of 0s and 1s only, where
-`communities[i, k] = 1` indicates that the ith node belongs to the kth
+is inputted as a matrix, then it should be a matrix of size `n` x `K`, where
+`K` is the number of estimated communities. The matrix should have 0s and 1s only, where
+`communities[i, k] = 1` indicates that the ith node belongs to the `k`th
 community. Each node is only allowed to belong to a single community, so
 there should only be a single 1 in each row of this matrix.}
 
 \item{distribution}{The distribution that the edges of the adjacency matrix
 follow. Acceptable distributions are `"gaussian"`, `"poisson"`, or `"bernoulli"`.}
 
-\item{K}{The number of estimated communities.}
-
 \item{epsilon}{The parameter controlling the amount of information
 allocated to the train network versus the test network. For Gaussian and
-Poisson networks, a larger value of epsilon indicates more information in
-the train network. For Bernoulli networks, this input is an alias to the
-`gamma` parameter.}
+Poisson networks, this must be between 0 and 1 (non-inclusive). A larger
+value of epsilon indicates more information in the train network.
+For Bernoulli networks, this input is an alias to the `gamma` parameter.}
 
 \item{gamma}{For Bernoulli networks, the parameter controlling the amount
-of information allocated to the train network versus the test network. A
-larger value of `gamma` indicates less information in the train network, and
-more in the test network.}
+of information allocated to the train network versus the test network.
+This must be between 0 and 0.5 (non-inclusive) A larger value of `gamma`
+indicates less information in the train network, and more in the test network.}
 
 \item{Atr}{The train adjacency matrix produced from the `split_network()`
 function. This is only necessary when the network has edges which follow
@@ -123,7 +121,7 @@ gaussian_inference <-
     infer_network(Ate = A_gaussian_te, u = u_matrix,
                   communities = communities_estimate,
                   distribution = "gaussian",
-                  epsilon = 0.3, K = 3, tau = 5)
+                  epsilon = 0.3, tau = 5)
 
 # Produce a 90\% confidence interval for the target of inference
 margin_of_error <- sqrt(gaussian_inference$estimate_variance) * qnorm(0.95)
@@ -166,8 +164,7 @@ bernoulli_inference <-
     infer_network(Ate = A_bernoulli_te, u = u_matrix,
                   communities = communities_estimate,
                   distribution = "bernoulli",
-                  gamma = 0.10, K = 3,
-                  Atr = A_bernoulli_tr)
+                  gamma = 0.10, Atr = A_bernoulli_tr)
 
 # Produce a 90\% confidence interval for the target of inference
 margin_of_error <- sqrt(bernoulli_inference$estimate_variance) * qnorm(0.95)

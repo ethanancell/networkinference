@@ -16,7 +16,6 @@
 #' `communities[i, k] = 1` indicates that the ith node belongs to the kth
 #' community. Each node is only allowed to belong to a single community, so
 #' there should only be a single 1 in each row of this matrix.
-#' @param K The number of estimated communities.
 #' @param allow_self_loops A logical indicating whether the network allows
 #' self loops (edges pointing from a node to itself.) By default this parameter
 #' is set to `TRUE`. If this is set to `FALSE`, then the values along the diagonal
@@ -54,11 +53,10 @@
 #' # first estimated community)
 #' target_of_inference <-
 #'   check_target_of_inference(M = M, u = u_vector,
-#'                             communities = communities_estimate, K = 2,
+#'                             communities = communities_estimate,
 #'                             allow_self_loops = TRUE, is_directed = TRUE)
 #' @export
-check_target_of_inference <- function(M, u, communities, K,
-                                      allow_self_loops = TRUE,
+check_target_of_inference <- function(M, u, communities, allow_self_loops = TRUE,
                                       is_directed = TRUE,
                                       bernoulli_target = FALSE,
                                       gamma = NULL,
@@ -70,9 +68,6 @@ check_target_of_inference <- function(M, u, communities, K,
 
   if (!(is.matrix(M))) {
     stop("The input \"M\" needs to be a matrix.")
-  }
-  if (!(is.numeric(K))) {
-    stop("The input \"K\" must be an integer.")
   }
   if (nrow(M) != ncol(M)) {
     stop("The input \"M\" must be a square matrix.")
@@ -92,11 +87,11 @@ check_target_of_inference <- function(M, u, communities, K,
     if (!is.numeric(gamma)) {
       stop("The argument \"gamma\" must be numeric.")
     }
-    if (gamma <= 0) {
-      stop("Input \"gamma\" cannot be less than or equal to 0.")
+    if (gamma < 0) {
+      stop("Input \"gamma\" cannot be less than 0.")
     }
-    if (gamma >= 0.5) {
-      stop("Input \"gamma\" cannot be greater than or equal to 0.5.")
+    if (gamma >= 0.50001) {
+      stop("Input \"gamma\" cannot be greater than 0.5.")
     }
     if (!(is.matrix(Atr))) {
       stop("The input \"Atr\" needs to be a matrix.")
@@ -112,7 +107,6 @@ check_target_of_inference <- function(M, u, communities, K,
 
   # Extract some info from the matrices
   n <- NROW(M)
-  K <- as.integer(K) # Technically just needs to be input as a numeric
 
   # Check the communities input
   if (!((is.matrix(communities)) |
@@ -120,31 +114,7 @@ check_target_of_inference <- function(M, u, communities, K,
         (is.factor(communities) && is.vector(communities)))) {
     stop("Input \"communities\" must be either a matrix or a vector.")
   }
-  # If u is inputted as a matrix, first vectorize it
-  if (is.matrix(u)) {
-    u_as_matrix <- u
-    u <- as.vector(u)
-  } else {
-    u_as_matrix <- matrix(u, ncol = K)
 
-    # Check the linear combination vector u
-    if (!(is.vector(u))) {
-      stop("The linear combination vector \"u\" must be a vector.")
-    }
-    if (!(is.numeric(u))) {
-      stop("The linear combination vector \"u\" must be numeric.")
-    }
-    if (length(u) != K^2) {
-      stop("The length of the linear combination vector \"u\" must be K^2.")
-    }
-  }
-
-  if (abs(sum(u^2) - 1) > 0.001) {
-    warning("Inputted \"u\" is not of norm 1. Normalizing this input to make it norm 1.")
-  }
-
-  # Make sure that "u" is of norm 1
-  u <- u / sqrt(sum(u^2))
   # If communities is a vector, then convert it to a matrix as well.
   if (is.vector(communities)) {
     if (!is.factor(communities) & !is.numeric(communities)) {
@@ -155,6 +125,17 @@ check_target_of_inference <- function(M, u, communities, K,
     }
     if (is.numeric(communities)) {
       communities <- as.integer(communities)
+      if (any(communities <= 0)) {
+        stop("Input \"communities\" must only contain positive integers.")
+      }
+    }
+
+    # Infer number of communities from this
+    K <- length(unique(communities))
+
+    # Make sure that K is the same as the maximum integer
+    if (any(communities > K)) {
+      stop("Number of unique elements in \"communities\" is not equal to the maximum community number. (Perhaps there are some communities from 1 to K that do not appear?)")
     }
 
     comm_as_vector <- communities
@@ -180,12 +161,44 @@ check_target_of_inference <- function(M, u, communities, K,
       stop("When specifying \"communities\" as a matrix, each row must only contain a single 1. No partial community membership is allowed.")
     }
     comm_as_matrix <- communities
+    K <- NCOL(comm_as_matrix)
+
     comm_as_vector <- rep(NA, n)
     for (i in 1:n) {
       comm_as_vector[i] <- which(communities[i, ] == 1)
     }
     # The number of nodes in each of the estimated communities
     n_hat <- apply(comm_as_matrix, 2, sum)
+  }
+
+  # Checks on u
+  if (abs(sum(u^2) - 1) > 0.001) {
+    warning("Inputted \"u\" is not of norm 1. Normalizing this input to make it norm 1.")
+  }
+  # Make sure that "u" is of norm 1
+  u <- u / sqrt(sum(u^2))
+  if (is.matrix(u)) {
+    u_as_matrix <- u
+    u <- as.vector(u)
+  } else {
+    u_as_matrix <- matrix(u, ncol = K)
+
+    # Check the linear combination vector u
+    if (!(is.vector(u))) {
+      stop("The linear combination vector \"u\" must be a vector.")
+    }
+    if (!(is.numeric(u))) {
+      stop("The linear combination vector \"u\" must be numeric.")
+    }
+    if (length(u) != K^2) {
+      stop("The length of the linear combination vector \"u\" must be K^2.")
+    }
+  }
+  # If an undirected network, make sure that 'u_matrix' is upper triangular
+  if (!is_directed) {
+    if (any(u_as_matrix[lower.tri(u_as_matrix)] != 0)) {
+      stop("Because the network was specified as undirected, the matrix version of the input \"u\" must be upper triangular.")
+    }
   }
 
   # =================================================== #
